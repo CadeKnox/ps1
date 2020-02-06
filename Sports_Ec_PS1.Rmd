@@ -1,0 +1,113 @@
+---
+title: "SpEc PS1"
+author: "Cade Knox"
+date: "2/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+data <- read_csv("kickers_v2.csv")
+```
+
+```{r}
+summary(data)
+```
+1a. The minimum distance of a kick is 18 yards.Max is 76. Mean 36.9 and Median 37 yards.
+
+1b. The minimum can't be lower because a kick is always the yards of the endzone (10) plus the yards of where the ball was kicked from the line of srimmage (which is usually always 7 yards back from the long snapper). Since on a football field there isn't a 0 yard line, it would have to be kicked from the 1 which 10 + 7 + 1 = 18, our minimum.
+
+1c. A 76 yard field goal is likely happening because the quarteback of the team couldn't throw it from the opposite 41 yard line to the end zone so they felt they had a better chance with a kick probably going into halftime. If he missed then all that would happen would be halftime and possesion would have already been decided for the second half.
+
+```{r}
+data %>% filter(Distance > 39) %>% 
+  filter(Distance < 46) %>% 
+  count(Success)
+
+data %>% filter(Distance > 45) %>% 
+  summary()
+```
+2. Over the entire sample the percentage of kicks made from 40 to 45 yards was 79%. While over 45 is 64%.
+
+```{r}
+ols <- lm(Success ~ Grass, data = data)
+summary(ols)
+```
+3. Using the OLS regression, you can tell that when played on grass the make rate is lower and is significant. This is most likely and makes sense because when playing on turf, the field is consistent and always the same.
+
+```{r}
+model <- lm(Distance ~ Grass, data = data)
+summary(model)
+
+mod <- lm(Success ~ Distance, data = data)
+summary(mod)
+```
+4a. Distance of attempt is negatively related with grass which also makes sense because since grass isn't as consistent as turf, kickers and coaches alike probably feel more confident to take the long kicks when on turf.
+
+4b. Success rate goes down about a percent as the distance increases every yard.
+
+5a. β1 →β1 + pXu (σu/σX)
+ 
+
+5b. Grass makes a kicker miss more when distance is further, the coefficient would be more negative.
+
+```{r}
+moda <- lm(Success ~ Distance + Grass + ScoreDiff + GameMinute, data = data)
+summary(moda)
+
+modc <- lm(Success ~ Distance + Grass + ScoreDiff + GameMinute + Kicker - 1, data = data)
+summary(modc)
+
+modd <- lm(Success ~ Distance + Grass + ScoreDiff + GameMinute + Kicker + Year - 1, data = data)
+summary(modd)
+```
+
+6a. The distance, score difference, and surface all ahd negative coefficients showing a negative relationship for success. However the game minutes had a positive relationship showing that kicks were more succesful with more minutes on the clock.
+
+6b. See evidence of choking kicking since kicks are more succesful with more time on the clock. You could select the final 2 minutes of clock and see success rate against the rest, you could also see the point differential and see the relationship there, you could look at teams and how good they were, and finally you could do regression with clock time and differential of score.
+
+6c. Corrects any biases that happen across kickers but not across time. The adjusted r squared goes up to 0.8.
+
+6d. The benefit of this is seeing if there is any change over time not over kickers. You'll be able to see if any technology maybe of cleats or training has improved. Not really too much evidence of kicking changing over the years.
+
+```{r}
+pre_mod <- predict.lm(modd)
+view(pre_mod)
+```
+
+
+7a. Based on this prediction we get a number greater than 1. So we believe it's a 100% chance that Justin tucker would do that.
+
+7b. I don't believe it is reasonable because Justin Tucker is a very good kicker, but there's never a sure thing in sports especially with another team out there that could block it.
+
+```{r}
+mod8 <- glm(Success ~ Distance + Grass + ScoreDiff + GameMinute + Kicker + Year - 1, data = data, family = binomial)
+pre_mod8 <- predict.glm(mod8)
+view(pre_mod8)
+```
+
+
+8a. 3.6 is now the predicted probability.
+
+8b. In OLS a linear relationship between the variables is assumed which is not the case for the logistic regression.
+
+9. They run observations that relate to eachother in the dataset.
+
+```{r}
+data %>% 
+  filter(Kicker == "Tucker") %>% 
+  summary()
+```
+
+
+10. I would say Justin Tucker has been the best. You look at the average score differential that he kicks with and its less than a single point at .98 and his success rate is 88%. His mean distance is also above 38 yards which is great. Being that clutch with the game on the lines is definitely the best and the fact that he has range always helps.
+
+
+
+11. I would one hundred percent take the kicker that is 75% on all kicks under 50. One third of kicks is just way too little to have in a guy from 40-50 yards. As a team you would hope that you don't have to get all the way to the 23 yard line just to have more than a 50 chance to make the kick. You could value those kickers with number of plays it takes to get the spot they need for a kick.
+
+12. The ommitted variables I would love to see are wind speed, temperature, and elevation. Wind speed I would expect the success rate to drop but maybe the maximum to increase if it's in the right direction. Temperature would affect success and distance because in colder conditions it means the ball has lower pressure and the ball wont go as far and the kicker deals with muscle tension. Finally elevation would affect primarily the distance as the ball goes a lot further in higher elevation which is why Mexico City and Denver are home to a lot of the records.
